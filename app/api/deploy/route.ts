@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { currentUser } from '@clerk/nextjs/server';
-import { prisma } from '@/lib/prisma';
+import { db } from '@/lib/db';
 import { decrypt } from '@/app/lib/crypto';
 
 const MASTER_PASSWORD = process.env.MASTER_PASSWORD!;
@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const dbUser = await prisma.user.findUnique({
+        const dbUser = await db.user.findUnique({
             where: { clerkId: user.id },
         });
 

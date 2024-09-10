@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { currentUser } from '@clerk/nextjs/server'
-import { prisma } from '@/lib/prisma'
+import { db } from '@/lib/db'
 
 export async function GET() {
     try {
@@ -9,7 +9,7 @@ export async function GET() {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
-        const dbUser = await prisma.user.findUnique({
+        const dbUser = await db.user.findUnique({
             where: { clerkId: user.id },
             select: { vercelAccessToken: true }
         })

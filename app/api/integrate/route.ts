@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { encrypt } from '@/app/lib/crypto';
-import { prisma } from '@/lib/prisma';
+import { db } from '@/lib/db';
 import { auth } from '@clerk/nextjs/server';
 
 const MASTER_PASSWORD = process.env.MASTER_PASSWORD!;
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
         const encryptedToken = await encrypt(newToken, MASTER_PASSWORD);
 
         // Store the encrypted token in the database
-        await prisma.user.update({
+        await db.user.update({
             where: { clerkId: userId },
             data: {
                 vercelAccessToken: encryptedToken,

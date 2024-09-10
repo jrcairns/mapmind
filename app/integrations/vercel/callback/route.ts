@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { currentUser } from '@clerk/nextjs/server';
-import { prisma } from '@/lib/prisma';
+import { db } from '@/lib/db';
 import { encrypt } from '@/app/lib/crypto';
 
 const APP_CLIENT_ID = process.env.APP_CLIENT_ID!;
@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
         const encryptedToken = await encrypt(access_token, MASTER_PASSWORD);
 
         // Upsert the user record with the encrypted token and other relevant information
-        await prisma.user.upsert({
+        await db.user.upsert({
             where: { clerkId: userId },
             update: {
                 vercelAccessToken: encryptedToken,

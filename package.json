@@ -7,7 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "prisma:generate": "node -r dotenv/config ./node_modules/.bin/prisma generate dotenv_config_path=.env.local",
+    "prisma:migrate": "node -r dotenv/config ./node_modules/.bin/prisma migrate deploy dotenv_config_path=.env.local",
+    "prisma:studio": "node -r dotenv/config ./node_modules/.bin/prisma studio dotenv_config_path=.env.local"
   },
   "dependencies": {
     "@clerk/nextjs": "^5.4.1",
@@ -19,6 +22,7 @@
     "@tanstack/react-query": "^5.55.4",
     "@tanstack/react-query-devtools": "^5.55.4",
     "@types/bcrypt": "^5.0.2",
+    "@vercel/postgres": "^0.5.0",
     "bcrypt": "^5.1.1",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",

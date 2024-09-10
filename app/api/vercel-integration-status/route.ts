@@ -1,0 +1,24 @@
+import { NextResponse } from 'next/server'
+import { currentUser } from '@clerk/nextjs/server'
+import { prisma } from '@/lib/prisma'
+
+export async function GET() {
+    try {
+        const user = await currentUser()
+        if (!user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        }
+
+        const dbUser = await prisma.user.findUnique({
+            where: { clerkId: user.id },
+            select: { vercelAccessToken: true }
+        })
+
+        return NextResponse.json({
+            isIntegrated: !!dbUser?.vercelAccessToken
+        })
+    } catch (error) {
+        console.error('Error checking Vercel integration status:', error)
+        return NextResponse.json({ error: 'Failed to check integration status' }, { status: 500 })
+    }
+}

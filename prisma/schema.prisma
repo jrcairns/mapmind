@@ -1,0 +1,29 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "sqlite"
+    url      = "file:./dev.db"
+}
+
+model User {
+    id                    String   @id @default(cuid())
+    clerkId               String   @unique
+    email                 String   @unique
+    name                  String?
+    vercelAccessToken     String?
+    vercelTeamId          String?
+    vercelConfigurationId String?
+    createdAt             DateTime @default(now())
+    updatedAt             DateTime @updatedAt
+}
+
+model DeploymentEvent {
+    id           String   @id @default(cuid())
+    type         String
+    deploymentId String
+    status       String
+    metadataJson String // Store JSON as a string
+    createdAt    DateTime @default(now())
+}

@@ -3,16 +3,16 @@ import { currentUser } from '@clerk/nextjs/server';
 import { prisma } from '@/lib/prisma';
 import { encrypt } from '@/app/lib/crypto';
 
-const VERCEL_CLIENT_ID = process.env.VERCEL_CLIENT_ID!;
-const VERCEL_CLIENT_SECRET = process.env.VERCEL_CLIENT_SECRET!;
+const APP_CLIENT_ID = process.env.APP_CLIENT_ID!;
+const APP_CLIENT_SECRET = process.env.APP_CLIENT_SECRET!;
 const MASTER_PASSWORD = process.env.MASTER_PASSWORD!;
 
-if (!VERCEL_CLIENT_ID || !VERCEL_CLIENT_SECRET || !MASTER_PASSWORD) {
+if (!APP_CLIENT_ID || !APP_CLIENT_SECRET || !MASTER_PASSWORD) {
     throw new Error('Missing required environment variables');
 }
 
-if (!VERCEL_CLIENT_SECRET) {
-    throw new Error('VERCEL_CLIENT_SECRET is not set');
+if (!APP_CLIENT_SECRET) {
+    throw new Error('APP_CLIENT_SECRET is not set');
 }
 
 export async function GET(request: NextRequest) {
@@ -43,8 +43,8 @@ export async function GET(request: NextRequest) {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: new URLSearchParams({
-                client_id: VERCEL_CLIENT_ID,
-                client_secret: VERCEL_CLIENT_SECRET,
+                client_id: APP_CLIENT_ID,
+                client_secret: APP_CLIENT_SECRET,
                 code,
                 redirect_uri: `${process.env.NEXT_PUBLIC_APP_URL}/integrations/vercel/callback`,
             }),

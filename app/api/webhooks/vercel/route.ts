@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import crypto from 'crypto';
 
-const VERCEL_CLIENT_SECRET = process.env.VERCEL_CLIENT_SECRET!;
+const APP_CLIENT_SECRET = process.env.APP_CLIENT_SECRET!;
 
-if (!VERCEL_CLIENT_SECRET) {
-    throw new Error('VERCEL_CLIENT_SECRET is not set');
+if (!APP_CLIENT_SECRET) {
+    throw new Error('APP_CLIENT_SECRET is not set');
 }
 
 function sha1(data: Buffer, secret: string): string {
@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     console.log("WEBHOOK FROM VERCEL")
     const rawBody = await request.text();
     const rawBodyBuffer = Buffer.from(rawBody, 'utf-8');
-    const bodySignature = sha1(rawBodyBuffer, VERCEL_CLIENT_SECRET);
+    const bodySignature = sha1(rawBodyBuffer, APP_CLIENT_SECRET);
 
     if (bodySignature !== request.headers.get('x-vercel-signature')) {
         return NextResponse.json({

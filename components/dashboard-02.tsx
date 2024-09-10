@@ -6,11 +6,9 @@ import Link from "next/link"
 import { useProjects } from "@/hooks/use-projects"
 import { useVercelIntegration } from "@/hooks/use-vercel-integration"
 import { useDeployment } from "@/hooks/use-deployment"
-import { useQueryClient } from '@tanstack/react-query'
 import { toast } from "sonner"
 
 export default function Dashboard() {
-  const queryClient = useQueryClient()
   const { data: integrationStatus, isLoading: isCheckingIntegration, error: integrationError } = useVercelIntegration()
   const { data: projects, isLoading: isLoadingProjects, error: projectsError } = useProjects()
   const deployMutation = useDeployment()
@@ -18,11 +16,11 @@ export default function Dashboard() {
   const handleDeploy = async (projectId: string) => {
     try {
       await deployMutation.mutateAsync(projectId)
-      toast.success("Deployment Initiated")
-      // Start polling for deployment status
-      queryClient.invalidateQueries({ queryKey: ['latestDeploymentEvent'] })
+      // Remove the toast notification from here
     } catch (error) {
-      toast.error("Failed to start deployment.")
+      console.error("Failed to start deployment:", error)
+      // We can keep an error toast here for unexpected errors
+      toast.error("An unexpected error occurred while initiating the deployment.")
     }
   }
 

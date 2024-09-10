@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
 import crypto from 'crypto';
+import { EventEmitter } from 'events';
 
 const APP_CLIENT_SECRET = process.env.APP_CLIENT_SECRET!;
 
@@ -10,6 +10,20 @@ if (!APP_CLIENT_SECRET) {
 
 function sha1(data: Buffer, secret: string): string {
     return crypto.createHmac('sha1', secret).update(data).digest('hex');
+}
+
+// Create a global event emitter
+const eventEmitter = new EventEmitter();
+
+interface DeploymentEvent {
+    type: string;
+    payload: {
+        deployment: {
+            id: string;
+            // Add other properties as needed
+        };
+        // Add other properties as needed
+    };
 }
 
 export async function POST(request: NextRequest) {
@@ -25,7 +39,7 @@ export async function POST(request: NextRequest) {
         }, { status: 401 });
     }
 
-    let payload;
+    let payload: DeploymentEvent;
     try {
         payload = JSON.parse(rawBody);
     } catch (error) {
@@ -33,22 +47,48 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Invalid JSON payload' }, { status: 400 });
     }
 
-    try {
-        // Store the webhook event in the database
-        await prisma.deploymentEvent.create({
-            data: {
-                type: payload.type,
-                deploymentId: payload.payload.deployment.id,
-                status: payload.type.split('.')[1], // Extract status from event type
-                metadataJson: JSON.stringify(payload), // Store the entire payload as a JSON string
-            },
-        });
+    // Emit the event
+    eventEmitter.emit('deploymentUpdate', payload);
 
-        // You could emit a server-sent event here to notify the client
+    return NextResponse.json({ success: true });
+}
 
-        return NextResponse.json({ success: true });
-    } catch (error) {
-        console.error('Error processing webhook:', error);
-        return NextResponse.json({ error: 'Failed to process webhook' }, { status: 500 });
-    }
+export async function GET(request: NextRequest) {
+    const responseStream = new TransformStream();
+    const writer = responseStream.writable.getWriter();
+    const encoder = new TextEncoder();
+
+    // Send headers for SSE
+    const response = new NextResponse(responseStream.readable, {
+        headers: {
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+        },
+    });
+
+    const sendEvent = async (event: DeploymentEvent) => {
+        await writer.write(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
+    };
+
+    // Listen for deployment updates
+    const listener = (event: DeploymentEvent) => {
+        sendEvent(event);
+    };
+
+    eventEmitter.on('deploymentUpdate', listener);
+
+    // Keep the connection alive
+    const intervalId = setInterval(() => {
+        sendEvent({ type: 'ping', payload: { deployment: { id: 'ping' } } });
+    }, 30000);
+
+    // Clean up on client disconnect
+    request.signal.addEventListener('abort', () => {
+        clearInterval(intervalId);
+        eventEmitter.off('deploymentUpdate', listener);
+        writer.close();
+    });
+
+    return response;
 }

@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
                 client_id: APP_CLIENT_ID,
                 client_secret: APP_CLIENT_SECRET,
                 code,
-                redirect_uri: `${process.env.NEXT_PUBLIC_APP_URL}/integrations/vercel/callback`,
+                redirect_uri: `${process.env.NEXT_PUBLIC_APP_URL}/api/integrations/vercel/callback`,
             }),
         });
 

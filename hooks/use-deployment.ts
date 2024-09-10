@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation } from '@tanstack/react-query'
 
 async function createDeployment(projectId: string) {
     const response = await fetch('/api/deploy', {
@@ -15,15 +15,7 @@ async function createDeployment(projectId: string) {
 }
 
 export function useDeployment() {
-    const queryClient = useQueryClient()
-
-    const mutation = useMutation({
+    return useMutation({
         mutationFn: createDeployment,
-        onSuccess: () => {
-            // Start polling for deployment status
-            queryClient.invalidateQueries({ queryKey: ['latestDeploymentEvent'] })
-        },
     })
-
-    return mutation
 }

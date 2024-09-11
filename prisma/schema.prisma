@@ -9,13 +9,26 @@ datasource db {
 }
 
 model User {
-    id                    String   @id @default(cuid())
-    clerkId               String   @unique
-    email                 String   @unique
+    id                    String    @id @default(cuid())
+    clerkId               String    @unique
+    email                 String    @unique
     name                  String?
     vercelAccessToken     String?
     vercelTeamId          String?
     vercelConfigurationId String?
-    createdAt             DateTime @default(now())
-    updatedAt             DateTime @updatedAt
+    createdAt             DateTime  @default(now())
+    updatedAt             DateTime  @updatedAt
+    projects              Project[]
+}
+
+model Project {
+    id        String   @id @default(cuid())
+    vercelId  String   @unique
+    name      String
+    query     String?
+    data      Json?
+    user      User     @relation(fields: [userId], references: [id])
+    userId    String
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 }

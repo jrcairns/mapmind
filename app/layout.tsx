@@ -1,10 +1,9 @@
+import { ClerkProvider } from '@clerk/nextjs';
 import type { Metadata } from "next";
 import localFont from "next/font/local";
-import { ClerkProvider } from '@clerk/nextjs'
 
-import "./globals.css";
 import QueryProvider from '@/components/query-provider';
-import { DeploymentNotifications } from '@/components/deployment-notifications';
+import "./globals.css";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -24,9 +23,9 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <ClerkProvider>
       <html lang="en">
@@ -35,7 +34,6 @@ export default function RootLayout({
         >
           <QueryProvider>
             {children}
-            <DeploymentNotifications />
           </QueryProvider>
         </body>
       </html>

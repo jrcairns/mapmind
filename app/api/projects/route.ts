@@ -77,7 +77,7 @@ export async function POST(request: Request) {
         // Add or update selected projects
         for (const projectId of selectedProjects) {
             const projectDetails = await fetchProjectDetails(decryptedToken, projectId, dbUser.vercelTeamId);
-            await db.project.upsert({
+            const dbProject = await db.project.upsert({
                 where: { vercelId: projectId },
                 update: { name: projectDetails.name },
                 create: {
@@ -86,6 +86,10 @@ export async function POST(request: Request) {
                     userId: dbUser.id
                 }
             });
+
+            // Add NEXT_PUBLIC_PROJECT_ID environment variable to the Vercel project
+            const envStatus = await addEnvironmentVariable(decryptedToken, projectId, dbUser.vercelTeamId, dbProject.id);
+            console.log(`Environment variable added for project ${projectId} with status ${envStatus}`);
         }
 
         return NextResponse.json({ message: 'Selected projects updated successfully' });
@@ -121,4 +125,32 @@ async function fetchProjectDetails(token: string, projectId: string, teamId?: st
 
     const projectData = await response.json();
     return { name: projectData.name };
+}
+
+// New helper function to add environment variable
+async function addEnvironmentVariable(token: string, projectId: string, teamId: string | null, dbProjectId: string) {
+    const response = await fetch(`https://api.vercel.com/v9/projects/${projectId}/env?upsert=true`, {
+        "body": JSON.stringify({
+            "key": "NEXT_PUBLIC_PROJECT_ID",
+            "value": dbProjectId,
+            "type": "plain",
+            "target": [
+                "preview",
+                "production",
+                "development"
+            ],
+        }),
+        "headers": {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+        },
+        "method": "post"
+    });
+
+    if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to add environment variable for project ${projectId}: ${errorText}`);
+    }
+
+    return response.status;
 }

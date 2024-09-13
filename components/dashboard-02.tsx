@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import DashboardLayout from "@/components/dashboard-layout"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -8,9 +9,9 @@ import { useDeployment } from "@/hooks/use-deployment"
 import { useVercelIntegration } from "@/hooks/use-vercel-integration"
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import Link from "next/link"
-import { useEffect, useState } from "react"
 import { useInView } from "react-intersection-observer"
 import { toast } from "sonner"
+import { Loader2, ArrowRight } from "lucide-react"
 
 async function fetchProjects({ pageParam = undefined }) {
   const response = await fetch(`/api/projects${pageParam ? `?until=${pageParam}` : ''}`)
@@ -113,32 +114,45 @@ export default function Dashboard() {
 
   const renderContent = () => {
     if (isCheckingIntegration) {
-      return <p>Checking integration status...</p>
+      return <Card className="p-6"><Loader2 className="h-6 w-6 animate-spin" /></Card>
     }
 
     if (integrationError) {
-      return <p>Error checking integration status: {integrationError.message}</p>
+      return (
+        <Card className="p-6">
+          <p className="text-red-500">Error checking integration status: {integrationError.message}</p>
+        </Card>
+      )
     }
 
     if (!integrationStatus?.isIntegrated) {
       return (
-        <div className="text-center">
-          <p className="mb-4">You haven&apos;t integrated your Vercel account yet.</p>
-          <Button asChild>
-            <Link href="https://vercel.com/integrations/mapmind" target="_blank">
-              Integrate Vercel
-            </Link>
-          </Button>
-        </div>
+        <Card className="text-center p-6">
+          <CardHeader>
+            <CardTitle>Vercel Integration Required</CardTitle>
+            <CardDescription>Connect your Vercel account to get started</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild>
+              <Link href="https://vercel.com/integrations/mapmind" target="_blank">
+                Integrate Vercel <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
       )
     }
 
     if (isLoadingProjects) {
-      return <p>Loading projects...</p>
+      return <Card className="p-6"><Loader2 className="h-6 w-6 animate-spin" /></Card>
     }
 
     if (projectsError) {
-      return <p>Error loading projects: {(projectsError as Error).message}</p>
+      return (
+        <Card className="p-6">
+          <p className="text-red-500">Error loading projects: {(projectsError as Error).message}</p>
+        </Card>
+      )
     }
 
     return (
@@ -150,7 +164,7 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             {selectedProjects.length === 0 ? (
-              <p>No projects selected. Add projects from the list below.</p>
+              <p className="text-gray-500">No projects selected. Add projects from the list below.</p>
             ) : (
               <ul className="space-y-4">
                 {selectedProjects.map((project) => (
@@ -160,7 +174,7 @@ export default function Dashboard() {
                     </Link>
                     <div className="space-x-2">
                       <Button onClick={() => handleDeploy(project.id)} disabled={deployMutation.isPending} size="sm">
-                        Deploy
+                        {deployMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Deploy"}
                       </Button>
                       <Button onClick={() => handleRemoveProject(project)} variant="destructive" size="sm">
                         Remove
@@ -183,7 +197,7 @@ export default function Dashboard() {
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select a project to add" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="max-h-[300px] overflow-y-auto">
                 {availableProjects.map((project) => (
                   <SelectItem key={project.id} value={project.id}>
                     {project.name}
@@ -204,8 +218,10 @@ export default function Dashboard() {
 
   return (
     <DashboardLayout>
-      <h1 className="text-2xl font-semibold text-gray-900 mb-6">Dashboard</h1>
-      {renderContent()}
+      <div className="container mx-auto p-6 space-y-6">
+        <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
+        {renderContent()}
+      </div>
     </DashboardLayout>
   )
 }

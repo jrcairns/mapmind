@@ -27,6 +27,7 @@ model Project {
     name      String
     query     String?
     data      Json?
+    page      Json?
     user      User     @relation(fields: [userId], references: [id])
     userId    String
     createdAt DateTime @default(now())

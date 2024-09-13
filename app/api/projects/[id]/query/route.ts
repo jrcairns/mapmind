@@ -55,7 +55,6 @@ async function getQueryData(query: string): Promise<{ results: PlaceData[], erro
         }
 
         return {
-            // @ts-ignore
             results: response.data.results.map(place => ({
                 place_id: place.place_id,
                 name: place.name,
@@ -76,7 +75,6 @@ async function getPlaceDetails(placeId: string): Promise<DetailedPlaceData | nul
         const response = await client.placeDetails({
             params: {
                 place_id: placeId,
-                // fields: ['name', 'formatted_address', 'formatted_phone_number', 'website', 'rating', 'opening_hours', 'types', 'reviews', 'photos', 'wheelchair_accessible_entrance', 'user_ratings_total', 'url',],
                 key: process.env.GOOGLE_MAPS_API_KEY!,
             },
         });
@@ -94,8 +92,8 @@ async function getPlaceDetails(placeId: string): Promise<DetailedPlaceData | nul
 
             const params = {
                 photoreference: photoReference,
-                maxwidth: 320,
-                maxheight: 320,
+                maxwidth: 1600,
+                maxheight: 1600,
                 key: process.env.GOOGLE_MAPS_API_KEY!,
             }
             const photoResponse = await client.placePhoto({
@@ -115,15 +113,12 @@ async function getPlaceDetails(placeId: string): Promise<DetailedPlaceData | nul
 
         return {
             place_id: placeId,
-            // @ts-ignore
             name: result.name,
-            // @ts-ignore
             formatted_address: result.formatted_address,
             formatted_phone_number: result.formatted_phone_number,
             website: result.website,
             rating: result.rating,
             user_ratings_total: result.user_ratings_total,
-            // @ts-ignore
             wheelchair_accessible_entrance: result.wheelchair_accessible_entrance,
             url: result.url,
             opening_hours: result.opening_hours ? {
@@ -159,7 +154,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
             return NextResponse.json({ error: 'User not found' }, { status: 404 })
         }
 
-        const { query } = await request.json()
+        const { query, promotedPlace } = await request.json()
 
         const project = await db.project.findFirst({
             where: {
@@ -176,34 +171,49 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
         const initialQueryData = await getQueryData(query);
 
         // Fetch detailed data for each place
-        const detailedResults = await Promise.all(
-            initialQueryData.results.map(async (place) => {
+        let detailedResults = await Promise.all(
+            initialQueryData.results.slice(0, 20).map(async (place) => {
                 const details = await getPlaceDetails(place.place_id);
                 return details || place;
             })
         );
 
-        // Prepare the data to be saved in the database
-        const queryData = {
-            results: detailedResults,
-            error: initialQueryData.error
-        };
+        // Handle promoted place
+        if (promotedPlace) {
+            const promotedDetails = await getPlaceDetails(promotedPlace.place_id);
+            if (promotedDetails) {
+                // Find the index of the currently promoted place
+                const currentPromotedIndex = detailedResults.findIndex(place => place.isBoosted);
 
-        // Update the project with the new query and data
-        const updatedProject = await db.project.update({
+                // If there's a currently promoted place, replace it
+                if (currentPromotedIndex !== -1) {
+                    detailedResults[currentPromotedIndex] = {
+                        ...detailedResults[currentPromotedIndex],
+                        isBoosted: false
+                    };
+                }
+
+                // Add the new promoted place at the top
+                detailedResults = [
+                    { ...promotedDetails, isBoosted: true },
+                    ...detailedResults.filter(place => place.place_id !== promotedDetails.place_id)
+                ];
+            }
+        }
+
+        // Ensure we have only 20 results
+        const finalResults = detailedResults.slice(0, 20);
+
+        // Save the updated results and query
+        await db.project.update({
             where: { id: project.id },
             data: {
-                query: query,
-                // @ts-ignore
-                data: queryData
+                data: { results: finalResults },
+                query: query
             }
         })
 
-        return NextResponse.json({
-            message: 'Query processed successfully',
-            data: queryData,
-            project: updatedProject
-        })
+        return NextResponse.json({ success: true, query, data: { results: finalResults } })
     } catch (error) {
         console.error('Error processing query:', error)
         return NextResponse.json({ error: 'Failed to process query' }, { status: 500 })

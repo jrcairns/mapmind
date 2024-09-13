@@ -11,7 +11,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 
         const project = await db.project.findUnique({
             where: { vercelId: params.id },
-            select: { query: true, data: true }
+            select: { query: true, data: true, page: true }
         })
 
         if (!project) {

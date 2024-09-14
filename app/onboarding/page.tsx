@@ -165,11 +165,13 @@ export default function OnboardingPage() {
             });
             if (!saveContentResponse.ok) throw new Error('Failed to save generated content');
 
-            return { success: true };
+            return { success: true, projectId };
         },
-        onSuccess: () => {
+        onSuccess: (data) => {
             setOnboardingComplete(true);
             toast.success("Onboarding completed successfully!");
+            // You can use the projectId here if needed
+            console.log("Onboarding completed for project:", data.projectId);
         },
         onError: (error) => {
             console.error("Onboarding error:", error); // Debug log
@@ -185,9 +187,13 @@ export default function OnboardingPage() {
     const handleComplete = async () => {
         if (onboardingComplete) {
             try {
-                const response = await fetch('/api/onboarding/complete', { method: 'POST' });
+                const response = await fetch('/api/onboarding/complete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ projectId })
+                });
                 if (response.ok) {
-                    router.push('/dashboard');
+                    router.push(`/projects/${projectId}`);
                 } else {
                     throw new Error('Failed to complete onboarding');
                 }

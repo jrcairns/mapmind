@@ -9,6 +9,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { IntegrationStatus } from "@/components/integration-status"
 import { Loader2 } from "lucide-react"
 import { useMutation } from "@tanstack/react-query"
+import { ArrowRight } from "lucide-react";
+import Link from "next/link";
 
 export default function OnboardingPage() {
     const [githubConnected, setGithubConnected] = useState(false);
@@ -79,8 +81,7 @@ export default function OnboardingPage() {
     };
 
     const handleVercelConnect = () => {
-        // Implement Vercel connection logic here
-        // This might involve redirecting to a Vercel OAuth flow
+        window.open("https://vercel.com/integrations/mapmind", "_blank");
     };
 
     const createRepoAndInstallGitHubApp = async () => {

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { auth, currentUser } from '@clerk/nextjs/server';
 import { db } from '@/lib/db';
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
@@ -13,17 +13,23 @@ export async function GET(request: Request) {
         return NextResponse.redirect(`${BASE_URL}/onboarding?error=invalid_installation`);
     }
 
-    const { userId } = auth();
+    const user = await currentUser();
+
+    const userId = user?.id;
 
     if (!userId) {
         return NextResponse.redirect(`${BASE_URL}/onboarding?error=unauthorized`);
     }
 
-    console.log({ installationId })
     try {
-        await db.user.update({
+        await db.user.upsert({
             where: { clerkId: userId },
-            data: { githubInstallationId: parseInt(installationId) },
+            update: { githubInstallationId: parseInt(installationId) },
+            create: {
+                clerkId: userId,
+                email: user.primaryEmailAddress?.emailAddress!,
+                githubInstallationId: parseInt(installationId)
+            },
         });
 
         return NextResponse.redirect(`${BASE_URL}/onboarding?success=github_installed`);

@@ -27,7 +27,7 @@ export async function GET(request: Request) {
             update: { githubInstallationId: parseInt(installationId) },
             create: {
                 clerkId: userId,
-                email: user.primaryEmailAddress?.emailAddress!,
+                email: user.primaryEmailAddress?.emailAddress || '',
                 githubInstallationId: parseInt(installationId)
             },
         });

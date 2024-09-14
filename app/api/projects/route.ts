@@ -130,21 +130,33 @@ async function fetchProjectDetails(token: string, projectId: string, teamId?: st
 // New helper function to add environment variable
 async function addEnvironmentVariable(token: string, projectId: string, teamId: string | null, dbProjectId: string) {
     const response = await fetch(`https://api.vercel.com/v9/projects/${projectId}/env?upsert=true`, {
-        "body": JSON.stringify({
-            "key": "NEXT_PUBLIC_PROJECT_ID",
-            "value": dbProjectId,
-            "type": "plain",
-            "target": [
-                "preview",
-                "production",
-                "development"
-            ],
-        }),
+        "body": JSON.stringify(
+            // {
+            //     "key": "NEXT_PUBLIC_API_URL",
+            //     "value": "https://mapmind-seven.vercel.app`",
+            //     "type": "plain",
+            //     "target": [
+            //         "preview",
+            //         "production",
+            //         "development"
+            //     ],
+            // },
+            {
+                "key": "NEXT_PUBLIC_PROJECT_ID",
+                "value": dbProjectId,
+                "type": "plain",
+                "target": [
+                    "preview",
+                    "production",
+                    "development"
+                ],
+            },
+        ),
         "headers": {
             "Authorization": `Bearer ${token}`,
             "Content-Type": "application/json"
         },
-        "method": "post"
+        "method": "POST"
     });
 
     if (!response.ok) {

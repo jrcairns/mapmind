@@ -1,38 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { currentUser } from '@clerk/nextjs/server';
 import { db } from '@/lib/db';
-import { decrypt } from '@/app/lib/crypto';
-
-const MASTER_PASSWORD = process.env.MASTER_PASSWORD!;
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
     try {
-        const user = await currentUser();
-        if (!user) {
+        const clerkUser = await currentUser();
+        if (!clerkUser) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
         const dbUser = await db.user.findUnique({
-            where: { clerkId: user.id },
+            where: { clerkId: clerkUser.id }
         });
 
-        if (!dbUser || !dbUser.vercelAccessToken) {
-            return NextResponse.json({ error: 'Vercel account not connected' }, { status: 400 });
+        if (!dbUser) {
+            return NextResponse.json({ error: 'User not found' }, { status: 404 });
         }
 
-        const decryptedToken = await decrypt(dbUser.vercelAccessToken, MASTER_PASSWORD);
-
-        const projectResponse = await fetch(`https://api.vercel.com/v9/projects/${params.id}`, {
-            headers: {
-                Authorization: `Bearer ${decryptedToken}`,
-            },
+        const project = await db.project.findFirst({
+            where: {
+                id: params.id,
+                userId: dbUser.id
+            }
         });
 
-        if (!projectResponse.ok) {
-            throw new Error('Failed to fetch project from Vercel');
+        if (!project) {
+            return NextResponse.json({ error: 'Project not found' }, { status: 404 });
         }
-
-        const project = await projectResponse.json();
 
         return NextResponse.json(project);
     } catch (error) {

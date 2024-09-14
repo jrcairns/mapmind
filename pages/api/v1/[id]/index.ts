@@ -20,6 +20,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             return res.status(404).json({ error: 'Project not found' })
         }
 
+        console.log({ project })
+
         let results: ResultItem[] = [];
         if (project.data && typeof project.data === 'object' && 'results' in project.data && Array.isArray(project.data.results)) {
             results = (project.data.results as any[]).map(item => item as ResultItem);

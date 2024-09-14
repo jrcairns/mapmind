@@ -17,7 +17,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
             return NextResponse.json({ error: 'User not found' }, { status: 404 });
         }
 
-        const { results } = await request.json();
+        const { content } = await request.json();
 
         const project = await db.project.findFirst({
             where: {
@@ -29,16 +29,17 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
         if (!project) {
             return NextResponse.json({ error: 'Project not found' }, { status: 404 });
         }
+        console.log({ content })
 
-        // Update the project data with the new results
+        // Update the project's page field with the new content
         await db.project.update({
             where: { id: project.id },
-            data: { data: typeof project.data === 'object' ? { ...project.data, results } : { results } }
+            data: { page: JSON.parse(content) }
         });
 
         return NextResponse.json({ success: true });
     } catch (error) {
-        console.error('Error updating project data:', error);
-        return NextResponse.json({ error: 'Failed to update project data' }, { status: 500 });
+        console.error('Error saving project content:', error);
+        return NextResponse.json({ error: 'Failed to save project content' }, { status: 500 });
     }
 }

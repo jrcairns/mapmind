@@ -63,10 +63,10 @@ export async function GET(request: NextRequest) {
             },
         });
         // Redirect to the next URL or dashboard
-        const redirectUrl = next || `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?integration=success`;
+        const redirectUrl = next || `${process.env.NEXT_PUBLIC_APP_URL}/onboarding?integration=success`;
         return NextResponse.redirect(redirectUrl);
     } catch (error) {
         console.error('Error in Vercel callback:', error);
-        return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/dashboard?integration=error`);
+        return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/onboarding?integration=error`);
     }
 }

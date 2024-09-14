@@ -98,6 +98,8 @@ export async function POST(request: Request) {
 
         const vercelProject = await vercelResponse.json();
 
+        console.log('Vercel Project:', vercelProject);
+
         // Create a new project in our database
         const dbProject = await db.project.create({
             data: {

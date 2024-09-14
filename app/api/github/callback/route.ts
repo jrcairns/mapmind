@@ -10,13 +10,13 @@ export async function GET(request: Request) {
     const setupAction = searchParams.get('setup_action');
 
     if (setupAction !== 'install' || !installationId) {
-        return NextResponse.redirect(`${BASE_URL}/dashboard?error=invalid_installation`);
+        return NextResponse.redirect(`${BASE_URL}/onboarding?error=invalid_installation`);
     }
 
     const { userId } = auth();
 
     if (!userId) {
-        return NextResponse.redirect(`${BASE_URL}/dashboard?error=unauthorized`);
+        return NextResponse.redirect(`${BASE_URL}/onboarding?error=unauthorized`);
     }
 
     console.log({ installationId })
@@ -26,9 +26,9 @@ export async function GET(request: Request) {
             data: { githubInstallationId: parseInt(installationId) },
         });
 
-        return NextResponse.redirect(`${BASE_URL}/dashboard?success=github_installed`);
+        return NextResponse.redirect(`${BASE_URL}/onboarding?success=github_installed`);
     } catch (error) {
         console.error('Error saving GitHub installation:', error);
-        return NextResponse.redirect(`${BASE_URL}/dashboard?error=installation_save_failed`);
+        return NextResponse.redirect(`${BASE_URL}/onboarding?error=installation_save_failed`);
     }
 }

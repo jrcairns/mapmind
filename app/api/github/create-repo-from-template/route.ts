@@ -72,6 +72,15 @@ export async function POST(request: Request) {
             },
             body: JSON.stringify({
                 name: name,
+                environmentVariables: [
+                    {
+                        key: "NEXT_PUBLIC_API_URL",
+                        value: "https://mapmind-seven.vercel.app",
+                        target: ["production"],
+                        type: "plain",
+                    },
+                ],
+                framework: "nextjs",
                 gitRepository: {
                     type: 'github',
                     // @ts-ignore
@@ -100,7 +109,7 @@ export async function POST(request: Request) {
 
         // Add environment variables to the Vercel project
         await addEnvironmentVariable(decryptedToken, vercelProject.id, user.vercelTeamId, 'NEXT_PUBLIC_PROJECT_ID', dbProject.id);
-        await addEnvironmentVariable(decryptedToken, vercelProject.id, user.vercelTeamId, 'NEXT_PUBLIC_API_URL', "https://mapmind-seven.vercel.app");
+        // await addEnvironmentVariable(decryptedToken, vercelProject.id, user.vercelTeamId, 'NEXT_PUBLIC_API_URL', "https://mapmind-seven.vercel.app");
 
         // Prepare deployment payload with project settings
         const deploymentPayload = {
@@ -114,8 +123,6 @@ export async function POST(request: Request) {
                 repoId: repo.id.toString(), // Add this line
             },
             projectSettings: {
-                buildCommand: 'npm run build',
-                outputDirectory: '.next',
                 framework: 'nextjs',
             },
         };

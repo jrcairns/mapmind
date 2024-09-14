@@ -45,21 +45,6 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Project is not connected to a Git repository' }, { status: 400 });
         }
 
-        const projectSettings = {
-            buildCommand: 'npm run build',
-            outputDirectory: '.next',
-            framework: 'nextjs',
-        }
-
-        // Fetch the corresponding db project to get the NEXT_PUBLIC_PROJECT_ID
-        const dbProject = await db.project.findFirst({
-            where: { vercelId: projectId }
-        });
-
-        if (!dbProject) {
-            return NextResponse.json({ error: 'Corresponding database project not found' }, { status: 404 });
-        }
-
         // Prepare deployment payload
         const deploymentPayload: DeploymentPayload = {
             name: projectData.name,
@@ -69,21 +54,6 @@ export async function POST(request: NextRequest) {
                 repo: projectData.link.repo,
                 ref: projectData.link.ref || projectData.link.branch || 'master',
             },
-            projectSettings: projectSettings,
-            env: [
-                {
-                    key: "NEXT_PUBLIC_PROJECT_ID",
-                    value: dbProject.id,
-                    type: "plain",
-                    target: ["production", "preview", "development"]
-                },
-                {
-                    key: "NEXT_PUBLIC_API_URL",
-                    value: "https://mapmind-seven.vercel.app",
-                    type: "plain",
-                    target: ["production", "preview", "development"]
-                }
-            ]
         };
 
         if (projectData.link.type === 'github') {
@@ -118,7 +88,7 @@ export async function POST(request: NextRequest) {
     }
 }
 
-// Update the DeploymentPayload interface
+// Define the DeploymentPayload type
 interface DeploymentPayload {
     name: string;
     target: string;
@@ -128,23 +98,4 @@ interface DeploymentPayload {
         ref: string;
         repoId?: string;
     };
-    projectSettings: {
-        buildCommand?: string;
-        commandForIgnoringBuildStep?: string;
-        devCommand?: string;
-        framework?: string;
-        installCommand?: string;
-        nodeVersion?: string;
-        outputDirectory?: string;
-        rootDirectory?: string;
-        serverlessFunctionRegion?: string;
-        skipGitConnectDuringLink?: boolean;
-        sourceFilesOutsideRootDirectory?: boolean;
-    };
-    env: Array<{
-        key: string;
-        value: string;
-        type: string;
-        target: string[];
-    }>;
 }
